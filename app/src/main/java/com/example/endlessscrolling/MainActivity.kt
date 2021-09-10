@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        recyclerView = findViewById(R.id.recyclerView)
+        progressBar = findViewById(R.id.progressBar)
 
         layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
@@ -75,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             }
             isLoading = false
             progressBar.visibility = View.GONE
-        }, 5000)
+        }, 1000)
 
     }
 }

@@ -2,40 +2,80 @@ package com.example.endlessscrolling
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.endlessscrolling.adapter.strings.ListStringsRecyclerAdapter
 
 class MainActivity : AppCompatActivity() {
 
-    private var page = 1
 
-    private lateinit var recycler: RecyclerView
+    val numberList: MutableList<String> = ArrayList()
+
+    var page = 0
+    var isLoading = false
+    val limit = 10
+
+    lateinit var adapter: ListStringsRecyclerAdapter
+    lateinit var layoutManager: LinearLayoutManager
+    lateinit var recyclerView: RecyclerView
+    lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        recycler = findViewById(R.id.recycler)
+        layoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = layoutManager
+        getPage()
 
-        Log.d(":::", getList().toString())
-        initRecycler()
+
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+
+//                if (dy > 0) {
+                val visibleItemCount = layoutManager.childCount
+                val pastVisibleItem = layoutManager.findFirstCompletelyVisibleItemPosition()
+                val total = adapter.itemCount
+
+                if (!isLoading) {
+
+                    if ((visibleItemCount + pastVisibleItem) >= total) {
+                        page++
+                        getPage()
+                    }
+
+                }
+//                }
+
+                super.onScrolled(recyclerView, dx, dy)
+            }
+        })
+
     }
 
-    private fun initRecycler(){
-        val stringAdapter = ListStringsRecyclerAdapter(getList())
-        recycler.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            setHasFixedSize(true)
-            adapter = stringAdapter
-        }
-    }
+    fun getPage() {
+        isLoading = true
+        progressBar.visibility = View.VISIBLE
+        val start = ((page) * limit) + 1
+        val end = (page + 1) * limit
 
-    private fun getList(): MutableList<String>{
-        val numberList: MutableList<String> = ArrayList()
-        for (i in 1..50){
-            numberList.add(i.toString())
+        for (i in start..end) {
+            numberList.add("Item " + i.toString())
         }
-        return numberList
+        Handler().postDelayed({
+            if (::adapter.isInitialized) {
+                adapter.notifyDataSetChanged()
+            } else {
+                adapter = ListStringsRecyclerAdapter(numberList)
+                recyclerView.adapter = adapter
+            }
+            isLoading = false
+            progressBar.visibility = View.GONE
+        }, 5000)
+
     }
 }
